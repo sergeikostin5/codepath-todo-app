@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SimpleTodo</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="new_item">Enter a new item</string>
+    <string name="add_item">Add Item</string>
+    <string name="edit_item_below">Edit Item Below</string>
+    <string name="save_edited_item">Save</string>
+</resources>
