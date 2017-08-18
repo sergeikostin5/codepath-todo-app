@@ -48,3 +48,12 @@ google-services.json
 freeline.py
 freeline/
 freeline_project_description.json
+.DS_Store
+.idea/
+app/
+build.gradle
+gradle.properties
+gradle/
+gradlew
+gradlew.bat
+settings.gradle

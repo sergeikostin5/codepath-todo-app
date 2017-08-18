@@ -7,4 +7,19 @@
     <string name="add_item">Add Item</string>
     <string name="edit_item_below">Edit Item Below</string>
     <string name="save_edited_item">Save</string>
+
+
+    <string-array name="priorities_array">
+        <item>LOW</item>
+        <item>MEDIUM</item>
+        <item>HIGH</item>
+    </string-array>
+
+    <string-array name="progress_array">
+        <item>TODO</item>
+        <item>WORKING</item>
+        <item>DONE</item>
+    </string-array>
+
+
 </resources>

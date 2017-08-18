@@ -2,7 +2,7 @@ package com.sergeikostin.simpletodo;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +11,9 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.sergeikostin.simpletodo.activities.EditItemActivity;
-import com.sergeikostin.simpletodo.util.DataPersistUtil;
+import com.sergeikostin.simpletodo.fragments.EditItemFragment.EditorTodoItemListener;
+import com.sergeikostin.simpletodo.model.TodoItem;
+import com.sergeikostin.simpletodo.util.DataBaseHelper;
 
 import java.util.List;
 
@@ -22,15 +23,13 @@ import java.util.List;
 
 public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> {
 
-    public static final int REQUEST_CODE = 20;
-    public static final String ITEM_EXTRA_POSITION = "item_extra_position";
-    public static final String ITEM_EXTRA_VALUE = "item_extra_value";
-
-    private List<String> mItems;
+    private List<TodoItem> mItems;
+    private EditorTodoItemListener mEditListener;
     private Activity mActivity;
 
-    public ItemsAdapter( Activity activity, List<String> items){
+    public ItemsAdapter( Activity activity, EditorTodoItemListener listener, List<TodoItem> items){
         mActivity = activity;
+        mEditListener = listener;
         mItems = items;
     }
 
@@ -38,37 +37,62 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
 
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from( context );
-        View itemView = inflater.inflate( android.R.layout.simple_list_item_1, parent, false );
+        View itemView = inflater.inflate( R.layout.list_item_view, parent, false );
         return new ViewHolder( itemView );
     }
 
     @Override public void onBindViewHolder( ViewHolder holder, int position ) {
-        String itemName = mItems.get( position );
+        TodoItem item = mItems.get( position );
 
-        TextView textView = holder.itemNameView;
-        textView.setText( itemName );
+        TextView taskTitle = holder.itemNameView;
+        TextView taskPriority = holder.itemPriorityView;
+        TextView taskDueDate = holder.itemDueDate;
+        taskTitle.setText( item.getName() );
+        taskDueDate.setText( "Due Date: " + item.getDate() );
+
+        int color;
+        switch ( item.getPriority() ){
+            case LOW:
+                color = Color.GREEN;
+                break;
+            case MEDIUM:
+                color = Color.BLUE;
+                break;
+            case HIGH:
+                color = Color.RED;
+                break;
+            default:
+                color = Color.GREEN;;
+        }
+        taskPriority.setText( item.getPriority().toString() );
+        taskPriority.setTextColor( color );
+
     }
 
     @Override public int getItemCount() {
         return mItems.size();
     }
 
-
     public class ViewHolder extends RecyclerView.ViewHolder{
 
         public TextView itemNameView;
+        public TextView itemPriorityView;
+        public TextView itemDueDate;
 
         public ViewHolder( final View itemView){
             super(itemView);
 
-            itemNameView = (TextView) itemView.findViewById( android.R.id.text1 );
+            itemNameView = (TextView) itemView.findViewById( R.id.item_title );
+            itemPriorityView = (TextView) itemView.findViewById( R.id.item_priority );
+            itemDueDate = (TextView) itemView.findViewById( R.id.due_date );
             itemView.setOnLongClickListener( new OnLongClickListener() {
                 @Override public boolean onLongClick( View v ) {
                     int pos = getAdapterPosition();
                     if(pos != RecyclerView.NO_POSITION){
+                        long id = mItems.get( pos ).getId();
                         mItems.remove( pos );
                         notifyItemRemoved( pos );
-                        DataPersistUtil.writeItems( mActivity, mItems );
+                        DataBaseHelper.getInstance( mActivity ).deleteItem( id );
                         return true;
                     }
                     return false;
@@ -77,11 +101,8 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
 
             itemView.setOnClickListener( new OnClickListener() {
                 @Override public void onClick( View v ) {
-                    Intent intent = new Intent(mActivity, EditItemActivity.class);
-                    int pos = getAdapterPosition();
-                    intent.putExtra( ITEM_EXTRA_POSITION, pos );
-                    intent.putExtra( ITEM_EXTRA_VALUE, itemNameView.getText().toString() );
-                    mActivity.startActivityForResult(intent, REQUEST_CODE);
+                    TodoItem item = mItems.get( getAdapterPosition());
+                    mEditListener.showEditDialog( "Edit Task" , item);
                 }
             } );
         }

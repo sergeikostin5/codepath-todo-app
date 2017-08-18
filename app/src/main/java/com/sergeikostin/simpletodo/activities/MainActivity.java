@@ -1,44 +1,54 @@
 package com.sergeikostin.simpletodo.activities;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
-import android.widget.Toast;
-
 import com.sergeikostin.simpletodo.ItemsAdapter;
 import com.sergeikostin.simpletodo.R;
-import com.sergeikostin.simpletodo.util.DataPersistUtil;
+import com.sergeikostin.simpletodo.fragments.EditItemFragment;
+import com.sergeikostin.simpletodo.fragments.EditItemFragment.EditorTodoItemListener;
+import com.sergeikostin.simpletodo.model.TodoItem;
+import com.sergeikostin.simpletodo.util.DataBaseHelper;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EditorTodoItemListener {
 
     private RecyclerView mRecyclerView;
-    private List<String> items;
+    private List<TodoItem> items;
     private FloatingActionButton mAddItemButton;
     private ItemsAdapter mItemsAdapter;
+    private DataBaseHelper mDbHelper;
 
     @Override
     protected void onCreate( Bundle savedInstanceState ) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
 
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        myToolbar.setLogo( R.drawable.zastavka );
+        myToolbar.setTitle( "" );
+        setSupportActionBar(myToolbar);
+
+        mDbHelper = DataBaseHelper.getInstance( this );
+
+
         mRecyclerView = (RecyclerView) findViewById( R.id.rvItems );
         mAddItemButton = (FloatingActionButton) findViewById( R.id.btnAddItem );
 
-        items = DataPersistUtil.readItems(this);
+        items = mDbHelper.getAllItems();
 
-        mItemsAdapter = new ItemsAdapter( this, items );
+        mItemsAdapter = new ItemsAdapter( this, this, items );
 
         mRecyclerView.setAdapter( mItemsAdapter );
         LinearLayoutManager layoutManager = new LinearLayoutManager( this );
@@ -47,17 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         mAddItemButton.setOnClickListener( new OnClickListener() {
             @Override public void onClick( View v ) {
-                EditText etNewItem = (EditText) findViewById( R.id.etNewItem );
-                String itemText = etNewItem.getText().toString();
-                if( !TextUtils.isEmpty( itemText )) {
-                    items.add( itemText );
-                    mItemsAdapter.notifyItemChanged( items.size() - 1 );
-                    etNewItem.setText( "" );
-                    hideKeyboard();
-                    DataPersistUtil.writeItems( MainActivity.this, items );
-                }else{
-                    Toast.makeText(MainActivity.this, "Task can not be blank", Toast.LENGTH_SHORT).show();
-                }
+               showEditDialog("New Task", null);
             }
         } );
     }
@@ -69,13 +69,21 @@ public class MainActivity extends AppCompatActivity {
                     .getApplicationWindowToken(), 0);
     }
 
-    @Override public void onActivityResult( int requestCode, int resultCode, Intent data ) {
-        if(resultCode == RESULT_OK && requestCode == ItemsAdapter.REQUEST_CODE){
-            String name = data.getExtras().getString( ItemsAdapter.ITEM_EXTRA_VALUE );
-            int pos = data.getExtras().getInt( ItemsAdapter.ITEM_EXTRA_POSITION );
-            items.set( pos, name );
-            DataPersistUtil.writeItems( this, items );
-            mItemsAdapter.notifyItemChanged( pos );
+    @Override
+    public void showEditDialog( String title, @Nullable TodoItem item ) {
+        FragmentManager fm = getSupportFragmentManager();
+
+        EditItemFragment editNameDialogFragment = EditItemFragment.newInstance(title, this, item);
+        editNameDialogFragment.show(fm, "fragment_edit_name");
+    }
+
+    @Override public void onEditorAction( TodoItem item, boolean edited ) {
+        if(edited){
+            mDbHelper.updateItem( item );
+        }else {
+            item.setId( mDbHelper.addItem( item ) );
+            items.add( item );
         }
+        mItemsAdapter.notifyDataSetChanged(  );
     }
 }

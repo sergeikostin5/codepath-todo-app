@@ -1,7 +1,5 @@
 package com.sergeikostin.simpletodo.model;
 
-import java.util.Date;
-
 /**
  * Created by sergei.kostin on 7/23/17.
  */
@@ -10,7 +8,16 @@ public class TodoItem {
 
     private String mName;
     private String mDescription;
-    private Date mDate;
+    private String mDate;
+    private long id;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId( long id ) {
+        this.id = id;
+    }
 
     public String getName() {
         return mName;
@@ -28,11 +35,11 @@ public class TodoItem {
         mDescription = description;
     }
 
-    public Date getDate() {
+    public String getDate() {
         return mDate;
     }
 
-    public void setDate( Date date ) {
+    public void setDate( String date ) {
         mDate = date;
     }
 
@@ -55,17 +62,26 @@ public class TodoItem {
     private Priority mPriority;
     private Status mStatus;
 
-
+    @Override public String toString() {
+        return "TodoItem{" +
+                "mName='" + mName + '\'' +
+                "mId='" + id + '\'' +
+                ", mDescription='" + mDescription + '\'' +
+                ", mDate='" + mDate + '\'' +
+                ", mPriority=" + mPriority +
+                ", mStatus=" + mStatus +
+                '}';
+    }
 
     public enum Priority{
-        HIGH,
         LOW,
-        MEDIUM
+        MEDIUM,
+        HIGH
     }
 
     public enum Status{
-        DONE,
         TODO,
-        INPROGRESS
+        WORKING,
+        DONE
     }
 }
