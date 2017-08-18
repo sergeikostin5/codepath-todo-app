@@ -50,7 +50,6 @@ freeline/
 freeline_project_description.json
 .DS_Store
 .idea/
-app/
 build.gradle
 gradle.properties
 gradle/
